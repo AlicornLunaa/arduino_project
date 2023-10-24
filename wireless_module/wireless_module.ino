@@ -4,16 +4,14 @@
 #include <ESP8266HTTPClient.h>
 
 // Definitions
-#define DEBUG_SERIAL
+// #define DEBUG_SERIAL
 #define URL_START "http://"
 
 // Variables
 const char* wirelessSSID = "Clydesdale";
-const char* wirelessPassword = "unicorn!";
+const char* wirelessPassword = "arduino_project";
 const uint16_t serverPort = 3000;
-
 String url = URL_START;
-String data = "/test";
 
 // Functions
 void assignServerURL(IPAddress addr){
@@ -26,11 +24,34 @@ void assignServerURL(IPAddress addr){
     url += String(serverPort);
 }
 
+bool sendRequest(WiFiClient client, String req){
+    // Send request to server
+    HTTPClient http;
+
+    if(http.begin(client, url + req)) {
+        // Get server's response
+        int httpCode = http.GET();
+        
+        if(httpCode > 0)
+            // Print data
+            Serial.print(http.getString());
+
+        // Cleanup connection
+        http.end();
+        return true;
+    }
+
+    return false;
+}
+
 void setup() {
     // User feedback
-    #ifdef DEBUG_SERIAL
     Serial.begin(115200);
+
+    #ifdef DEBUG_SERIAL
     Serial.print("Connecting");
+    #else
+    Serial.print("connect");
     #endif
 
     // Start connection to internet
@@ -53,48 +74,20 @@ void setup() {
     Serial.print(wirelessSSID);
     Serial.print(" with IP address: ");
     Serial.println(WiFi.localIP());
+    #else
+    Serial.print("success");
     #endif
 }
 
 void loop() {
     // Sending data to server
-    if(WiFi.status() == WL_CONNECTED) {
-        // Start connection
-        WiFiClient client;
-        HTTPClient http;
-
-        #ifdef DEBUG_SERIAL
-        Serial.println("============= Start Response =============");
-        Serial.println("Requesting: " + url + data);
-        #endif
-
-        // Send request to server
-        if(http.begin(client, url + data)) {
-            // Get server's response
-            int httpCode = http.GET();
-            
-            #ifdef DEBUG_SERIAL
-            Serial.println("Response code: " + String(httpCode));
-
-            if(httpCode > 0)
-                // Print data
-                Serial.println(http.getString());
-            #endif
-
-            // Cleanup connection
-            http.end();
-        } else {
-            // Error reporting
-            #ifdef DEBUG_SERIAL
-            Serial.printf("[HTTP] Unable to connect\n");
-            #endif
+    if(Serial.available() > 0){
+        String str = Serial.readString();
+        
+        if(WiFi.status() == WL_CONNECTED) {
+            // Start connection
+            WiFiClient client;
+            sendRequest(client, str);
         }
-
-        #ifdef DEBUG_SERIAL
-            Serial.println("============== End Response ==============\n");
-        #endif
     }
-
-    // Dont overload the server
-    delay(5000);
 }

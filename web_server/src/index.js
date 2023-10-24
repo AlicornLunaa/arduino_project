@@ -7,6 +7,16 @@ app.get("/test", (req, res) => {
     res.send("Hello World!");
 });
 
+app.get("/arduino", (req, res) => {
+    // arduino?cmd=""
+    console.log(req.query);
+    res.status(200).send("ok");
+});
+
+app.get("*", (req, res) => {
+    res.status(404).send("bad");
+})
+
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`)
 });
