@@ -82,7 +82,7 @@ void setup() {
 void loop() {
     // Sending data to server
     if(Serial.available() > 0){
-        String str = Serial.readString();
+        String str = "/command/" + Serial.readString();
         
         if(WiFi.status() == WL_CONNECTED) {
             // Start connection
