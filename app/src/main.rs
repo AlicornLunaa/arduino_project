@@ -4,30 +4,6 @@ use std::{time::Duration, io::{self, Write}};
 use axum::{body::Body, extract::Path, routing::get, Router};
 use serialport::{self, SerialPort, SerialPortInfo, SerialPortType};
 
-// Structures
-struct ArduinoCommand {
-    name: &'static str,
-    func: fn() -> bool
-}
-
-// Constants
-const COMMANDS: [ArduinoCommand; 2] = [
-    ArduinoCommand {
-        name: "hello_world",
-        func: ||{
-            println!("hello world!");
-            true
-        }
-    },
-    ArduinoCommand {
-        name: "button1",
-        func: ||{
-            println!("Button pressed");
-            true
-        }
-    }
-];
-
 // Functions
 #[tokio::main]
 async fn main() {
@@ -35,7 +11,7 @@ async fn main() {
     let available_ports = serialport::available_ports().expect("No ports found!");
 
     match connect_to_any_port(&available_ports) {
-        Ok(port) => start_port_server(port),
+        Ok(port) => start_port_server(port).await,
         Err(_) => start_web_server().await,
     }
 }
@@ -64,17 +40,7 @@ fn connect_to_any_port(available_ports: &Vec<SerialPortInfo>) -> Result<Box<dyn 
     return Err("no_ports");
 }
 
-fn get_function_by_name(name: &String) -> Result<fn() -> bool, &str> {
-    for command in COMMANDS {
-        if command.name == name {
-            return Ok(command.func);
-        }
-    }
-
-    return Err("bad");
-}
-
-fn start_port_server(mut port: Box<dyn SerialPort>) {
+async fn start_port_server(mut port: Box<dyn SerialPort>) {
     println!("Connected to serial port {} at baud {}", &port.name().unwrap(), &port.baud_rate().unwrap());
 
     let mut result = "ok";
@@ -87,15 +53,8 @@ fn start_port_server(mut port: Box<dyn SerialPort>) {
             Ok(t) => {
                 let cmd = String::from_utf8_lossy(&serial_buf[..t]);
                 
-                match get_function_by_name(&cmd.to_string()) {
-                    Ok(func) => {
-                        if !(func)() {
-                            result = "bad";
-                        }
-                    },
-                    Err(_) => {
-                        result = "bad";
-                    }
+                if !run_by_name(&cmd.to_string()).await {
+                    result = "bad";
                 }
 
                 port.write(result.as_bytes()).expect("Port failure");
@@ -119,14 +78,23 @@ async fn start_web_server() {
 }
 
 async fn command_route(Path(command_name): Path<String>) -> &'static str {
-    match get_function_by_name(&command_name) {
-        Ok(func) => {
-            if (func)() {
-                "ok"
-            } else {
-                "bad"
-            }
-        },
-        Err(_) => "bad"
+    let res = run_by_name(&command_name).await;
+
+    if res {
+        return "ok";
     }
+
+    "bad"
+}
+
+async fn run_by_name(name: &String) -> bool {
+    match name.as_str() {
+        "button1" => button1().await,
+        _ => false
+    }
+}
+
+async fn button1() -> bool {
+    println!("Button 1 pressed!");
+    return true;
 }
