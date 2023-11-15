@@ -3,6 +3,7 @@ use std::{time::Duration, io::{self, Write}};
 
 use axum::{body::Body, extract::Path, routing::get, Router};
 use serialport::{self, SerialPort, SerialPortInfo, SerialPortType};
+use rsautogui::{mouse, keyboard, screen};
 
 // Functions
 #[tokio::main]
@@ -90,11 +91,51 @@ async fn command_route(Path(command_name): Path<String>) -> &'static str {
 async fn run_by_name(name: &String) -> bool {
     match name.as_str() {
         "button1" => button1().await,
+        "button2" => button2().await,
+        "button3" => button3().await,
+        "button4" => button4().await,
         _ => false
     }
 }
 
 async fn button1() -> bool {
     println!("Button 1 pressed!");
+    tweet("deez");
     return true;
+}
+
+async fn button2() -> bool {
+    println!("Button 2 pressed!");
+    tweet("nuts");
+    return true;
+}
+
+async fn button3() -> bool {
+    println!("Button 3 pressed!");
+    tweet("joe");
+    return true;
+}
+
+async fn button4() -> bool {
+    println!("Button 4 pressed!");
+    tweet("mama");
+    return true;
+}
+
+fn tweet(content: &str) {
+    let (width, height) = screen::size();
+    let first_x = (873.0 / 1920.0 * (width as f32)) as u16;
+    let first_y = (164.0 / 1080.0 * (height as f32)) as u16;
+    let second_x = (1134.0 / 1920.0 * (width as f32)) as u16;
+    let second_y = (254.0 / 1080.0 * (height as f32)) as u16;
+
+    let rand_num = rand::random::<u16>();
+    let rand_str = format!("{}", rand_num);
+    let msg = String::from(content) + " " + rand_str.as_str();
+
+    mouse::move_to(first_x, first_y);
+    mouse::click(mouse::Button::Left);
+    keyboard::typewrite(msg.as_str());
+    mouse::move_to(second_x, second_y);
+    mouse::click(mouse::Button::Left);
 }
