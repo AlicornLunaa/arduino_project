@@ -5,3 +5,5 @@
 
 The web server is needed to create requests for conventional servers on the internet.  
 The ESP8266 is used to communicate with the web server using an Arduino, a remote serial monitor.
+
+Prebuilt binary can be round at https://github.com/AlicornLunaa/arduino_project/releases

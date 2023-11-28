@@ -91,34 +91,13 @@ async fn command_route(Path(command_name): Path<String>) -> &'static str {
 async fn run_by_name(name: &String) -> bool {
     match name.as_str() {
         "button1" => button1().await,
-        "button2" => button2().await,
-        "button3" => button3().await,
-        "button4" => button4().await,
         _ => false
     }
 }
 
 async fn button1() -> bool {
     println!("Button 1 pressed!");
-    tweet("deez");
-    return true;
-}
-
-async fn button2() -> bool {
-    println!("Button 2 pressed!");
-    tweet("nuts");
-    return true;
-}
-
-async fn button3() -> bool {
-    println!("Button 3 pressed!");
-    tweet("joe");
-    return true;
-}
-
-async fn button4() -> bool {
-    println!("Button 4 pressed!");
-    tweet("mama");
+    tweet("can we please get a good grade");
     return true;
 }
 
